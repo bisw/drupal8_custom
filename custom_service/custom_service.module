@@ -1,0 +1,55 @@
+<?php
+
+/**
+ * @file
+ * Provide form alter, custom service and other few functionality.
+ */
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implements hook_form_alter().
+ */
+function custom_service_form_alter(array &$form, FormStateInterface $form_state, $form_id) {
+  if ($form_id === 'system_site_information_settings') {
+    // Get config data of the module.
+    $config = \Drupal::config('custom_service.settings');
+    $siteapikey = $config->get('siteapikey');
+
+    // Add apikey field.
+    $form['site_information']['siteapikey'] = [
+      '#type' => 'textfield',
+      '#title' => t('Site API Key'),
+      '#description' => t('Add Site API Key.'),
+      '#default_value' => !empty($siteapikey) ? $siteapikey : 'No API Key yet',
+    ];
+
+    // Change the submit button text.
+    $form['actions']['submit']['#value'] = t('Update Configuration');
+
+    // Define a custom callback function upon submit the form.
+    $form['actions']['submit']['#submit'][] = 'custom_service_site_info_form_submit';
+  }
+}
+
+/**
+ * Submit handler for the site information form.
+ */
+function custom_service_site_info_form_submit($form, FormStateInterface $form_state) {
+  try {
+    $siteapikey = $form_state->getValue('siteapikey');
+    if (!empty($siteapikey)) {
+      // Set value to siteapikey variable.
+      $config = \Drupal::configFactory()->getEditable('custom_service.settings');
+      $config->set('siteapikey', $siteapikey);
+      $config->save();
+
+      // Throw an successful message with apikey value to notify user.
+      drupal_set_message(t("Site API Key has been saved with value '@val'", array('@val' => $siteapikey)));
+    }
+  }
+  catch (Exception $e) {
+    // Throw an error message for exceptional case.
+    drupal_set_message(t('Caught exception in custom_service: @msg', array('@msg' => $e->getMessage())));
+  }
+}

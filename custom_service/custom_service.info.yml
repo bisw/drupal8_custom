@@ -1,0 +1,10 @@
+name: Custom Service
+description: Add api key in site info form and create a custom rest service.
+package: Other
+type: module
+core: 8.x
+
+dependencies:
+  - rest
+  - restui
+  - basic_auth
